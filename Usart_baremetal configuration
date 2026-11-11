@@ -1,1 +1,40 @@
 
+#include "stm32f446xx.h"
+
+int main(void)
+{
+    // STEP 1: Enable GPIOA clock
+    RCC->AHB1ENR |= (1U << 0);
+
+    // STEP 2: Configure PA2 as Alternate Function mode
+    GPIOA->MODER &= ~(3U << 4);
+    GPIOA->MODER |=  (2U << 4);
+
+    // STEP 3: Select AF7 for PA2 (USART2_TX)
+    GPIOA->AFR[0] &= ~(0xFU << 8);
+    GPIOA->AFR[0] |=  (0x7U << 8);
+
+    // STEP 4: Enable USART2 peripheral clock
+    RCC->APB1ENR |= (1U << 17);
+
+    // STEP 5: Configure baud rate to 9600
+    // PCLK1 = 16 MHz
+    USART2->BRR = 0x0683;
+
+    // STEP 6: Enable USART2 and transmitter
+    USART2->CR1 |= (1U << 13);  // UE = 1
+    USART2->CR1 |= (1U << 3);   // TE = 1
+
+    // STEP 7: Transmit character 'A'
+    while (1)
+    {
+        // Wait until Transmit Data Register is empty
+        while (!(USART2->SR & (1U << 7)))
+        {
+        }
+
+        // Write character into Data Register
+        USART2->DR = 'A';
+    }
+}
+
